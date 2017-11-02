@@ -1,4 +1,6 @@
 defmodule SecretHandshake do
+  use Bitwise
+  @items [{ "wink", 1 }, { "double blink", 2 }, { "close your eyes", 4 }, { "jump", 8 }]
   @doc """
   Determine the actions of a secret handshake based on the binary
   representation of the given `code`.
@@ -15,40 +17,28 @@ defmodule SecretHandshake do
   """
   @spec commands(code :: integer) :: list(String.t())
   def commands(code) do
-    case Integer.to_string(code, 2) do
-      code_string when byte_size(code_string) > 5 ->
-        []
-      code_string ->
-        code_list = standardize(code_string)
-        command_list = ["wink", "double blink", "close your eyes", "jump", :reverse]
-        execute(code_list, command_list, [])
+    Enum.map(@items, fn({cmd, value}) -> 
+      code_generator(cmd, value, code, []) 
+    end) |> List.flatten |> check_for_sixteen(code)
+  end
+
+  defp code_generator(cmd, value, code, result) do
+    case matcher(value, code) do
+      true -> [cmd | result]
+      _    ->    result
     end
   end
 
-  defp standardize(code) do
-    prefix = 5 - String.length(code)
-    code = String.duplicate("0", prefix) <> code
 
-    code
-    |> String.split("", trim: true)
-    |> Enum.map(&String.to_integer(&1))
-    |> Enum.reverse()
+  defp matcher(value, code) do
+    (value &&& code) === value
   end
 
-  def execute([1], [_command], result) do
-    Enum.reverse(result)
-  end
-
-  def execute([0], [_command], result) do
-    result
-  end
-
-  def execute([1 | codes], [command | commands], result) do
-    execute(codes, commands, result ++ [command])
-  end
-
-  def execute([0 | codes], [_command | commands], result) do
-    execute(codes, commands, result)
+  defp check_for_sixteen(list, code) do
+    case matcher(16, code) do
+      true -> Enum.reverse(list)
+      _ -> list
+    end
   end
 end
 

@@ -9,7 +9,7 @@ defmodule SecretHandshakeTest do
   use ExUnit.Case
 
   describe "Create a handshake for a number" do
-    #@tag :pending
+    # @tag :pending
     test "wink for 1" do
       assert SecretHandshake.commands(1) == ["wink"]
     end
